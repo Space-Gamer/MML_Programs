@@ -3,6 +3,7 @@
 # [1, 2, 3] ; [4, 5, 6] ; [7, 8, 9]
 # (b) Generate 5 random vectors in R4 and apply the above program to get a set of orthonormal
 # vectors.
+# Note: Perform a check for independence of given vectors before applying Gram-Schmidt.
 
 import numpy as np
 import time
@@ -16,24 +17,33 @@ def vector_norm(x, p=2):
     return x_norm
 
 
-def gram_schmidt_process(v1, v2, v3, v4=None):
-    if v4 is None:
-        q = np.zeros((3, 3))
-    else:
-        q = np.zeros((4, 4))
+def gram_schmidt_process(vectors):
+    m, n = vectors.shape
 
-    # Gram-Schmidt process
-    q[0] = v1 / vector_norm(v1)
-    q[1] = v2 - np.dot(v2, q[0]) * q[0]
-    q[1] = q[1] / vector_norm(q[1])
-    q[2] = v3 - np.dot(v3, q[0]) * q[0] - np.dot(v3, q[1]) * q[1]
-    q[2] = q[2] / vector_norm(q[2])
+    q = np.zeros((m, n))
 
-    if v4 is not None:
-        q[3] = v4 - np.dot(v4, q[0]) * q[0] - np.dot(v4, q[1]) * q[1] - np.dot(v4, q[2]) * q[2]
-        q[3] = q[3] / vector_norm(q[3])
+    for i in range(m):
+        v = vectors[i]
+        for j in range(i):
+            v = v - np.dot(v, q[j]) * q[j]
+        q[i] = v / vector_norm(v)
 
     return q
+
+
+def independent_vectors(vectors):
+    m, n = vectors.shape
+
+    ind_vect = []
+
+    for i in range(m):
+        v = vectors[i]
+        for j in range(i):
+            v = v - np.dot(v, ind_vect[j]) * ind_vect[j]
+        if vector_norm(v) > 1e-10:
+            ind_vect.append(v / vector_norm(v))
+
+    return np.array(ind_vect)
 
 
 def main_a():  # For sub-question a
@@ -41,7 +51,12 @@ def main_a():  # For sub-question a
     v2 = np.array([4, 5, 6])
     v3 = np.array([7, 8, 9])
 
-    q = gram_schmidt_process(v1, v2, v3)
+    print("The only independent vectors are:")
+    ind_vect = independent_vectors(np.array([v1, v2, v3]))
+    print(ind_vect)
+
+    print("\nOrthonormal vectors are:")
+    q = gram_schmidt_process(ind_vect)
 
     print(q)
     return
@@ -63,9 +78,13 @@ def main_b():  # For sub-question b
         print("v3 = ", v3)
         print("v4 = ", v4)
 
-        q = gram_schmidt_process(v1, v2, v3, v4)
+        print("\nIndependent vectors are:")
+        ind_vect = independent_vectors(np.array([v1, v2, v3, v4]))
+        print(ind_vect)
 
-        print("Orthonormal vectors:")
+        q = gram_schmidt_process(ind_vect)
+
+        print("\nOrthonormal vectors:")
         print(q)
         print()
     return
